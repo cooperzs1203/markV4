@@ -6,6 +6,7 @@
 package mnet
 
 import (
+	"errors"
 	"log"
 	"markV4/mface"
 )
@@ -143,5 +144,76 @@ func (s *server) Stop() error {
 
 	s.status = Serve_Status_Stopped
 	log.Printf("[Server] Stopped")
+	return nil
+}
+
+func (s *server) Config() mface.MConfig {
+	return s.config
+}
+
+func (s *server) ConnManager() mface.MConnManager {
+	return s.connManager
+}
+
+func (s *server) MessageManager() mface.MMessageManager {
+	return s.messageManager
+}
+
+func (s *server) RouteManager() mface.MRouteManager {
+	return s.routeManager
+}
+
+func (s *server) AddRoutes(routeMap map[string]func(mface.MMessage, mface.MMessage) error) error {
+	if routeMap == nil || len(routeMap) == 0 {
+		return errors.New("route map can not be empty")
+	}
+
+	routes := make([]mface.MRouteHandler, 0)
+	for routeId, routeHandleFunc := range routeMap {
+		if routeId == "" {
+			return errors.New("routeId can not be empty")
+		}
+
+		if routeHandleFunc == nil {
+			return errors.New("route handle function can not be nil")
+		}
+
+		route := newRouteHandler(routeId, routeHandleFunc)
+		routes = append(routes, route)
+	}
+
+	if err := s.routeManager.AddRoutes(routes); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *server) AddRoute(routeId string, routeHandleFunc func(mface.MMessage, mface.MMessage) error) error {
+	if routeId == "" {
+		return errors.New("routeId can not be empty")
+	}
+
+	if routeHandleFunc == nil {
+		return errors.New("route handle function can not be nil")
+	}
+
+	route := newRouteHandler(routeId, routeHandleFunc)
+	if err := s.routeManager.AddRoute(route); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *server) RemoveRoute(routeId string) error {
+	if routeId == "" {
+		return errors.New("routeId can not be empty")
+	}
+
+	if err := s.routeManager.RemoveRoute(routeId); err != nil {
+		return err
+	}
+
 	return nil
 }

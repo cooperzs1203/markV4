@@ -7,4 +7,13 @@ package mface
 
 type MRouteManager interface {
 	MBaseManager
+
+	AddRoutes([]MRouteHandler) error
+	AddRoute(MRouteHandler) error
+	RemoveRoute(string) error
+}
+
+type MRouteHandler interface {
+	RouteID() string
+	RouteHandleFunc() func(MMessage, MMessage) error
 }

@@ -7,9 +7,10 @@ package mnet
 
 import (
 	"log"
+	"markV4/mface"
 )
 
-func newChannel() *channel {
+func newChannel() mface.MChannel {
 	c := &channel{
 		status:      Serve_Status_UnStarted,
 		size:        0,
@@ -31,7 +32,7 @@ func (c *channel) SetSize(size uint64) {
 }
 
 func (c *channel) Load() error {
-	log.Printf("[Channel] Load")
+	//log.Printf("[Channel] Load")
 	c.status = Serve_Status_Load
 
 	dataInChan := make(chan interface{}, c.size)
@@ -43,7 +44,7 @@ func (c *channel) Load() error {
 }
 
 func (c *channel) Start() error {
-	log.Printf("[Channel] Start")
+	//log.Printf("[Channel] Start")
 	c.status = Serve_Status_Start
 
 	go c.start()
@@ -52,7 +53,7 @@ func (c *channel) Start() error {
 }
 
 func (c *channel) Reload() error {
-	log.Printf("[Channel] Reload")
+	//log.Printf("[Channel] Reload")
 	c.status = Serve_Status_Reload
 
 	newDataInChan := make(chan interface{}, c.size)
@@ -128,11 +129,14 @@ func (c *channel) OfficialEnding() error {
 
 	close(*c.dataOutChan)
 
+	log.Println(len(*c.dataOutChan))
 	for {
 		if len(*c.dataOutChan) == 0 {
 			break
 		}
 	}
+
+	log.Println("out")
 
 	return nil
 }
@@ -143,6 +147,24 @@ func (c *channel) DataInChannel() chan interface{} {
 
 func (c *channel) DataOutChannel() chan interface{} {
 	return *c.dataOutChan
+}
+
+func (c *channel) DataInChannelWorking() bool {
+	working := false
+	if c.status == Serve_Status_Start || c.status == Serve_Status_Reload {
+		working = true
+	}
+
+	return working
+}
+
+func (c *channel) DataOutChannelWorking() bool {
+	working := false
+	if c.status == Serve_Status_Start || c.status == Serve_Status_Reload || c.status == Serve_Status_Ending {
+		working = true
+	}
+
+	return working
 }
 
 func (c *channel) start() {

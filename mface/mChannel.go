@@ -10,4 +10,6 @@ type MChannel interface {
 	MBaseServe
 	MBaseServeEnd
 	MBaseServeDataChannel
+	DataInChannelWorking() bool
+	DataOutChannelWorking() bool
 }
